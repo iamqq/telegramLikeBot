@@ -8,9 +8,9 @@ from aiogram.types import ReplyKeyboardRemove, \
     ReplyKeyboardMarkup, KeyboardButton, \
     InlineKeyboardMarkup, InlineKeyboardButton, ContentType
 
-inline_btn_1 = InlineKeyboardButton('Первая кнопка!', callback_data='button1')
-inline_kb_full = InlineKeyboardMarkup(row_width=2).add(inline_btn_1)
-inline_kb_full.add(InlineKeyboardButton('Вторая кнопка', callback_data='btn2'))
+inline_btn_1 = InlineKeyboardButton('Первая кнопка! 👋', callback_data='button1')
+inline_btn_2 = InlineKeyboardButton('Вторая кнопка! 🤗', callback_data='button2')
+inline_kb_full = InlineKeyboardMarkup().row(inline_btn_1,inline_btn_2)
 
 
 # logging.basicConfig(level=logging.INFO)
