@@ -8,10 +8,13 @@ from aiogram.types import ReplyKeyboardRemove, \
     ReplyKeyboardMarkup, KeyboardButton, \
     InlineKeyboardMarkup, InlineKeyboardButton, ContentType
 
-inline_btn_1 = InlineKeyboardButton('Первая кнопка! 👋', callback_data='button1')
-inline_btn_2 = InlineKeyboardButton('Вторая кнопка! 🤗', callback_data='button2')
-inline_kb_full = InlineKeyboardMarkup().row(inline_btn_1,inline_btn_2)
+import  db
 
+inline_btn_1 = InlineKeyboardButton('❤️', callback_data='button1')
+inline_btn_2 = InlineKeyboardButton('🙈', callback_data='button2')
+inline_btn_3 = InlineKeyboardButton('😔', callback_data='button3')
+inline_btn_4 = InlineKeyboardButton('😁', callback_data='button4')
+inline_kb_full = InlineKeyboardMarkup().row(inline_btn_1,inline_btn_2,inline_btn_3,inline_btn_4)
 
 # logging.basicConfig(level=logging.INFO)
 
@@ -31,7 +34,7 @@ async def send_welcome(message: types.Message):
         "Последние внесённые расходы: /expenses\n"
         "Категории трат: /categories")
 
-@dp.message_handler(content_types=ContentType.PHOTO )
+@dp.message_handler(content_types=[ContentType.PHOTO,ContentType.VIDEO])
 async def photo_handler(message: types.Message):
     await message.answer(text="Оцени!",reply_markup=inline_kb_full,reply=True)
 
@@ -85,17 +88,43 @@ async def photo_handler(message: types.Message):
 
 
 # @dp.message_handler()
-# async def add_expense(message: types.Message):
-#     # """Добавляет новый расход"""
-#     # try:
-#     #     expense = expenses.add_expense(message.text)
-#     # except exceptions.NotCorrectMessage as e:
-#     #     await message.answer(str(e))
-#     #     return
-#     answer_message = (
-#         f"Добавлены траты .\n\n"
-#         f"  ")
-#     await message.answer(answer_message)
+# async def others_message(message: types.Message):
+#     print(repr(message))
+#     # # """Добавляет новый расход"""
+#     # # try:
+#     # #     expense = expenses.add_expense(message.text)
+#     # # except exceptions.NotCorrectMessage as e:
+#     # #     await message.answer(str(e))
+#     # #     return
+#     # answer_message = (
+#     #     f"Добавлены траты .\n\n"
+#     #     f"  ")
+#     # await message.answer(answer_message)
+
+# @dp.callback_query_handler(func=lambda c: c.data == 'button1')
+@dp.callback_query_handler()
+async def process_callback_button1(callback_query: types.CallbackQuery):
+    # print(str(callback_query))
+    # print(str(callback_query.message.reply_markup))
+    # await bot.answer_callback_query(callback_query.id)
+    # await bot.send_message(callback_query.from_user.id, callback_query.data)
+    mess = callback_query.message
+    keys = []
+    for button in callback_query.message.reply_markup.inline_keyboard[0]:
+        if callback_query.data == button.callback_data :
+            rows = db.likes(mess.chat.id, mess.message_id, button.callback_data, callback_query.from_user.id)
+            print(str(rows)+callback_query.from_user.username+'#'+callback_query.data)
+            if rows == 0:
+                button.text = button.text[0]
+            else:
+                button.text = button.text[0] +str(rows)
+            # await bot.send_message(callback_query.from_user.id, button.text+"#"+button.callback_data)
+        # else:
+            # button.text=button.text+'$'
+            # await bot.send_message(callback_query.from_user.id, button.text+"$"+button.callback_data)
+        keys.append(InlineKeyboardButton(text=button.text, callback_data=button.callback_data))
+    keyb = InlineKeyboardMarkup().row(keys[0],keys[1],keys[2],keys[3])
+    await bot.edit_message_text(chat_id=callback_query.message.chat.id,message_id=callback_query.message.message_id,text=callback_query.message.text,reply_markup=keyb)
 
 
 if __name__ == '__main__':
