@@ -1,5 +1,6 @@
 
 import sqlite3
+import emoji_likes
 
 
 conn = sqlite3.connect("likes.db")
@@ -7,7 +8,7 @@ cursor = conn.cursor()
 default_likes = "❤️🙈😔😁"
 
 def set_user_likes(chat_id:int, user_id:int, likes:str):
-    likes = likes.replace(" ", "")
+    likes = " ".join(likes.split())
     if likes=="":
         cursor.execute(f"delete from userlikes where chat_id={chat_id} and user_id={user_id}")
     else:    
@@ -20,7 +21,7 @@ def set_user_likes(chat_id:int, user_id:int, likes:str):
     conn.commit()
 
 def set_chat_likes(chat_id:int, likes:str):
-    likes = likes.replace(" ", "")
+    likes = " ".join(likes.split())
     if likes=="":
         likes = default_likes
     cursor.execute(f"select * from chatlikes where chat_id={chat_id}")
@@ -35,14 +36,14 @@ def get_likes(chat_id:int, user_id:int):
     cursor.execute(f"select likes from userlikes where chat_id={chat_id} and user_id={user_id}")
     likes = cursor.fetchone()
     if likes:
-        return likes[0] 
+        return emoji_likes.likes_list(likes[0])
     else:
         cursor.execute(f"select likes from chatlikes where chat_id={chat_id}")
         likes = cursor.fetchone()
         if likes:
-            return likes[0]
+            return emoji_likes.likes_list(likes[0])
         else:
-            return default_likes
+            return emoji_likes.likes_list(default_likes)
 
 def likes(chat_id:int, message_id:int, button:str, user_id:int):
 
