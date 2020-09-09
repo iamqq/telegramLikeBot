@@ -49,7 +49,7 @@ async def photo_handler(message: types.Message):
         step = 0
         for like in likes:
             step = step+1
-            like = like.translate("_"," ")
+            like = like.replace("_"," ")
             kb.insert(InlineKeyboardButton(like, callback_data='b'+str(step)))
         await message.answer(text="Оцени!",reply_markup=kb,reply=True)
 
