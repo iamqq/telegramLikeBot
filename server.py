@@ -61,6 +61,8 @@ async def process_callback_button1(callback_query: types.CallbackQuery):
         if callback_query.data == button.callback_data :
             words = button.text.split()
             rows = db.likes(mess.chat.id, mess.message_id, button.callback_data, callback_query.from_user.id)
+            if len(words) == 1:
+                words.insert(0,"0")
             words[0] = str(rows)
             button.text = " ".join(words)
             # if rows == 0:
