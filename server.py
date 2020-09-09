@@ -49,7 +49,7 @@ async def photo_handler(message: types.Message):
         step = 0
         for like in likes:
             step = step+1
-            like = like.replace("_"," ")
+            like = "0 "+like.replace("_"," ")
             kb.insert(InlineKeyboardButton(like, callback_data='b'+str(step)))
         await message.answer(text="Оцени!",reply_markup=kb,reply=True)
 
@@ -59,11 +59,14 @@ async def process_callback_button1(callback_query: types.CallbackQuery):
     kb = InlineKeyboardMarkup(len(callback_query.message.reply_markup.inline_keyboard[0]))
     for button in callback_query.message.reply_markup.inline_keyboard[0]:
         if callback_query.data == button.callback_data :
+            words = button.text.split()
             rows = db.likes(mess.chat.id, mess.message_id, button.callback_data, callback_query.from_user.id)
-            if rows == 0:
-                button.text = button.text[0]
-            else:
-                button.text = button.text[0] +str(rows)
+            words[0] = str(rows)
+            button.text = " ".join(words)
+            # if rows == 0:
+            #     button.text = button.text[0]
+            # else:
+            #     button.text = button.text[0] +str(rows)
         kb.insert(InlineKeyboardButton(text=button.text, callback_data=button.callback_data))
     await bot.edit_message_reply_markup(chat_id=mess.chat.id,message_id=mess.message_id,reply_markup=kb)
 
