@@ -15,13 +15,18 @@ dp = Dispatcher(bot)
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
     await message.answer(
-        text="<b>Бот для лайков</b>\n\n"
+        text="<b>Бот для лайков</b>\n"
         "Добавите бота в ваш чат и он будет добавлять кнопки\n"
         " ❤️ 🙈 😔 😁 \n"
         "под каждое новое фото и видео добавляемое в чат\n\n"
-        "сменить текущий набор кнопок чата /chatlikes 👍👌😡\n" 
-        "сменить текущий набор кнопок для себя в чате /userlikes ⚙️🗑\n" 
-        "/chatlikes и /userlikes - вернуться к набору по умолчанию",
+        "сменить текущий набор кнопок чата \n"
+        "<b>/chatlikes 👍 👌 😡 Yes! No!</b>\n" 
+        "сменить текущий набор кнопок для себя в чате\n"
+        "<b>/userlikes Нет Like ⚙️ Да Очень_хорошо</b>\n" 
+        "отдельные значения разделять <b>пробелом</b>\n"
+        "пробел в тексте заменяйте <b>подчеркиванием _</b>\n\n"
+        "<b>/chatlikes</b> и <b>/userlikes</b> без параметров\n"
+        " - вернуться к набору по умолчанию",
         parse_mode="HTML")
 
 @dp.message_handler(commands=['chatlikes'])
@@ -42,9 +47,10 @@ async def photo_handler(message: types.Message):
     if len(likes) > 0:
         kb = InlineKeyboardMarkup(row_width=len(likes))
         step = 0
-        for em in likes:
+        for like in likes:
             step = step+1
-            kb.insert(InlineKeyboardButton(em, callback_data='b'+str(step)))
+            like = like.translate("_"," ")
+            kb.insert(InlineKeyboardButton(like, callback_data='b'+str(step)))
         await message.answer(text="Оцени!",reply_markup=kb,reply=True)
 
 @dp.callback_query_handler()
