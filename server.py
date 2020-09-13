@@ -39,6 +39,21 @@ async def set_user_likes(message: types.Message):
     likes = message.text[11:]
     db.set_user_likes(message.chat.id, message.from_user.id,likes)
 
+@dp.message_handler(commands=['currentlikes'])
+async def get_current_likes(message: types.Message):
+    txt = 'userlikes:\n'
+    rows = db.get_userlikes(message.chat.id)
+    # print(str(rows))
+    for row in rows:
+        txt = txt + str(row[1])+'-'+row[0]+'\n'
+
+    txt = txt+'chatlikes:\n'
+    rows = db.get_chatlikes(message.chat.id)
+    for row in rows:
+        txt = txt + row[0]+'\n'
+    await message.answer(
+        text=txt)        
+
 # добавляем оценку под фото и видео 
 @dp.message_handler(content_types=[ContentType.PHOTO,ContentType.VIDEO])
 async def photo_handler(message: types.Message):
