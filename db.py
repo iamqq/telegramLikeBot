@@ -65,13 +65,6 @@ def likes(chat_id:int, message_id:int, button:str, user_id:int):
 
     cursor.execute(f"select button,user_id from likes where chat_id={chat_id} and message_id={message_id}") #" and button='{button}'")
     rows = cursor.fetchall()
-    users = {}
-    # for row in rows:
-    #     if row[1] not in users:
-    #         users[row[1]] = {'icons': [row[0]],'name': row[1]} 
-    #     else:
-    #         users[row[1]]['icons'].append(row[0])
-    # return users
     conn.commit()
     return rows
 
