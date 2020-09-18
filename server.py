@@ -71,21 +71,47 @@ async def photo_handler(message: types.Message):
 @dp.callback_query_handler()
 async def process_callback_button1(callback_query: types.CallbackQuery):
     mess = callback_query.message
+    rows = db.likes(mess.chat.id, mess.message_id, callback_query.data, callback_query.from_user.id)
+    users = {}
+    buttons = {}
+    for row in rows:
+        if row[1] not in users:
+            users[row[1]] = {'icons': [row[0]],'name': await bot.get_chat_member(mess.chat.id,row[1])} 
+        else:
+            users[row[1]]['icons'].append(row[0])
+        if row[0] not in buttons:
+            buttons[row[0]] = 1
+        else:
+            buttons[row[0]] = buttons[row[0]] + 1
     kb = InlineKeyboardMarkup(len(callback_query.message.reply_markup.inline_keyboard[0]))
+    em = {}
     for button in callback_query.message.reply_markup.inline_keyboard[0]:
-        if callback_query.data == button.callback_data :
-            words = button.text.split()
-            rows = db.likes(mess.chat.id, mess.message_id, button.callback_data, callback_query.from_user.id)
-            if len(words) == 1:
-                words.insert(0,"0")
-            words[0] = str(rows)
-            button.text = " ".join(words)
+        # if callback_query.data == button.callback_data :
+        words = button.text.split()
+        if len(words) > 1:
+            del words[0]
+        em[button.callback_data] = " ".join(words)
+        words.insert(0,"0")
+        if button.callback_data in buttons:
+            words[0] = str(buttons[button.callback_data])
+        button.text = " ".join(words)
             # if rows == 0:
             #     button.text = button.text[0]
             # else:
             #     button.text = button.text[0] +str(rows)
         kb.insert(InlineKeyboardButton(text=button.text, callback_data=button.callback_data))
-    await bot.edit_message_reply_markup(chat_id=mess.chat.id,message_id=mess.message_id,reply_markup=kb)
+    if len(rows) == 0:
+        text = "Оцени!"
+    else:
+        text = ""
+        for key in users:
+            text+= users[key]['name'].user.first_name+":"
+            for icon in users[key]['icons']:
+                text+=em[icon]+" "
+            text+="\n"
+
+    await bot.edit_message_text(text = text,chat_id=mess.chat.id,message_id=mess.message_id,reply_markup=kb)
+    # await bot.edit_message_reply_markup(chat_id=mess.chat.id,message_id=mess.message_id,reply_markup=kb)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)

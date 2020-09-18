@@ -3,8 +3,8 @@
 import os
 import psycopg2
 
-# DATABASE_URL = "postgres://tskofeitnbwvja:bde35e8f7d47a8b20e4616c20474c4f0995bce00392151a5825031e489a580c5@ec2-52-200-134-180.compute-1.amazonaws.com:5432/d5n36m8235d8it"
-DATABASE_URL = os.environ['DATABASE_URL']
+DATABASE_URL = "postgres://tskofeitnbwvja:bde35e8f7d47a8b20e4616c20474c4f0995bce00392151a5825031e489a580c5@ec2-52-200-134-180.compute-1.amazonaws.com:5432/d5n36m8235d8it"
+# DATABASE_URL = os.environ['DATABASE_URL']
 conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
 # conn = psycopg2.connect(du, sslmode='require')
@@ -71,8 +71,15 @@ def likes(chat_id:int, message_id:int, button:str, user_id:int):
     else:
         cursor.execute(f"delete from likes where chat_id={chat_id} and message_id={message_id} and button='{button}' and user_id={user_id}")
 
-    cursor.execute(f"select * from likes where chat_id={chat_id} and message_id={message_id} and button='{button}'")
-    rows = len(cursor.fetchall())
+    cursor.execute(f"select button,user_id from likes where chat_id={chat_id} and message_id={message_id}") #" and button='{button}'")
+    rows = cursor.fetchall()
+    users = {}
+    # for row in rows:
+    #     if row[1] not in users:
+    #         users[row[1]] = {'icons': [row[0]],'name': row[1]} 
+    #     else:
+    #         users[row[1]]['icons'].append(row[0])
+    # return users
     conn.commit()
     return rows
 
