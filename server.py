@@ -44,8 +44,9 @@ async def set_user_likes(message: types.Message):
 @dp.message_handler(commands=['currentlikes'])
 async def get_current_likes(message: types.Message):
     txt = 'userlikes:\n'
+    #print(str(message))
     rows = db.get_userlikes(message.chat.id)
-    # print(str(rows))
+    #print(str(rows))
     for row in rows:
         txt = txt + str(row[1])+'-'+row[0]+'\n'
 
@@ -74,10 +75,17 @@ async def photo_handler(message: types.Message):
 async def process_callback_button1(callback_query: types.CallbackQuery):
     mess = callback_query.message
     rows = db.likes(mess.chat.id, mess.message_id, callback_query.data, callback_query.from_user.id)
+    #print(str(mess.chat.id))
+    #print(str(mess.message_id))
+    #print(str(callback_query.data))
+    #print(str(callback_query.from_user.id))
+    #print(str(mess))
+    #print(str(rows))
     users = {}
     buttons = {}
     for row in rows:
         if row[1] not in users:
+            #print(str(row[1]))
             users[row[1]] = {'icons': [row[0]],'name': await bot.get_chat_member(mess.chat.id,row[1])} 
         else:
             users[row[1]]['icons'].append(row[0])

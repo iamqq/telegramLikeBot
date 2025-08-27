@@ -6,6 +6,8 @@ create table likes(
     PRIMARY KEY(chat_id,message_id,button,user_id)
 );
 
+CREATE INDEX idx_likes_user_id ON likes(user_id);
+
 create table userlikes(
     chat_id integer,
     user_id integer,
