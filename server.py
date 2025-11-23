@@ -104,54 +104,112 @@ async def photo_handler(message: types.Message):
         # Single file
         await send_likes_markup(message)
 
+def update_message_text(text: str, user_name: str, icon: str):
+    """
+    Parses the text, toggles the icon for the user, and returns:
+    1. The new text
+    2. A dictionary of counts for each icon
+    """
+    lines = text.split('\n')
+    user_line_index = -1
+    user_icons = []
+    
+    # 1. Parse existing text
+    new_lines = []
+    for i, line in enumerate(lines):
+        if line.startswith(user_name + ":"):
+            user_line_index = i
+            # Extract existing icons (everything after "Name:")
+            content = line[len(user_name) + 1:].strip()
+            if content:
+                user_icons = content.split()
+            new_lines.append(line) # Placeholder, will replace later
+        elif line.strip() != "": # Keep other lines
+            new_lines.append(line)
+
+    # 2. Toggle the icon
+    if icon in user_icons:
+        user_icons.remove(icon)
+    else:
+        user_icons.append(icon)
+
+    # 3. Reconstruct User Line
+    new_user_line = f"{user_name}: {' '.join(user_icons)}"
+    
+    if user_line_index != -1:
+        if not user_icons:
+            # If no icons left, remove the line entirely
+            del new_lines[user_line_index]
+        else:
+            new_lines[user_line_index] = new_user_line
+    elif user_icons:
+        # New user adding a like
+        new_lines.append(new_user_line)
+
+    # 4. Calculate Counts
+    counts = {}
+    final_text = "\n".join(new_lines)
+    
+    for line in new_lines:
+        parts = line.split(":")
+        if len(parts) > 1:
+            icons = parts[1].strip().split()
+            for i in icons:
+                counts[i] = counts.get(i, 0) + 1
+                
+    return final_text, counts
+
 @dp.callback_query_handler()
 async def process_callback_button1(callback_query: types.CallbackQuery):
     mess = callback_query.message
-    # Note: callback_query.from_user is the user who clicked, mess.chat.id is the chat
-    # We need to pass the user who clicked to the db function
-    rows = await db.likes(mess.chat.id, mess.message_id, callback_query.data, callback_query.from_user.id)
+    user = callback_query.from_user
+    # Use first_name as the identifier (simple but has collisions)
+    user_name = user.first_name 
     
-    users = {}
-    buttons = {}
-    for row in rows:
-        if row[1] not in users:
-            try:
-                chat_member = await bot.get_chat_member(mess.chat.id, row[1])
-                users[row[1]] = {'icons': [row[0]], 'name': chat_member} 
-            except Exception as e:
-                logger.error(f"Error getting chat member: {e}")
-                continue
+    # Get the button icon (the text part, e.g., "❤️" from "5 ❤️")
+    # We need to find which icon this button represents.
+    # The callback_data is like 'b1', 'b2'. We need to map 'b1' -> '❤️'
+    
+    # Reconstruct the map from the keyboard
+    # We assume the keyboard layout hasn't changed structure
+    icon_map = {}
+    for button in mess.reply_markup.inline_keyboard[0]:
+        # Button text is like "5 ❤️" or "❤️" or "0 ❤️"
+        parts = button.text.split()
+        if len(parts) > 1 and parts[0].isdigit():
+            icon_char = " ".join(parts[1:]) # Everything after the number
         else:
-            users[row[1]]['icons'].append(row[0])
-        if row[0] not in buttons:
-            buttons[row[0]] = 1
-        else:
-            buttons[row[0]] = buttons[row[0]] + 1
-            
-    kb = InlineKeyboardMarkup(len(callback_query.message.reply_markup.inline_keyboard[0]))
-    em = {}
-    for button in callback_query.message.reply_markup.inline_keyboard[0]:
-        words = button.text.split()
-        if len(words) > 1:
-            del words[0]
-        em[button.callback_data] = " ".join(words)
-        words.insert(0,"0")
-        if button.callback_data in buttons:
-            words[0] = str(buttons[button.callback_data])
-        button.text = " ".join(words)
-        kb.insert(InlineKeyboardButton(text=button.text, callback_data=button.callback_data))
+            icon_char = button.text # Just the icon
         
-    if len(rows) == 0:
-        text = "Оцени!"
-    else:
-        text = ""
-        for key in users:
-            text+= users[key]['name'].user.first_name+":"
-            for icon in users[key]['icons']:
-                text+=em[icon]+" "
-            text+="\n"
+        icon_map[button.callback_data] = icon_char
 
-    await bot.edit_message_text(text=text, chat_id=mess.chat.id, message_id=mess.message_id, reply_markup=kb)
+    clicked_icon = icon_map.get(callback_query.data)
+    if not clicked_icon:
+        return # Should not happen
+
+    # Update Text and Get Counts
+    current_text = mess.text if mess.text and mess.text != "Оцени!" else ""
+    new_text, counts = update_message_text(current_text, user_name, clicked_icon)
+    
+    if not new_text:
+        new_text = "Оцени!"
+
+    # Update Keyboard Numbers
+    kb = InlineKeyboardMarkup(row_width=len(mess.reply_markup.inline_keyboard[0]))
+    for button in mess.reply_markup.inline_keyboard[0]:
+        icon = icon_map[button.callback_data]
+        count = counts.get(icon, 0)
+        new_button_text = f"{count} {icon}"
+        kb.insert(InlineKeyboardButton(text=new_button_text, callback_data=button.callback_data))
+
+    if new_text != mess.text or True: # Always try to update to ensure consistency
+        try:
+            await bot.edit_message_text(text=new_text, chat_id=mess.chat.id, message_id=mess.message_id, reply_markup=kb)
+        except Exception as e:
+            # Telegram throws error if message content is exactly the same
+            pass
+    
+    await callback_query.answer() # Stop the loading animation
 
 if __name__ == '__main__':
     # Ensure DB is initialized (optional, but good practice if we had an init function)

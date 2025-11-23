@@ -66,17 +66,4 @@ async def get_chatlikes(chat_id: int):
         rows = await cursor.fetchall()
     return rows
 
-async def likes(chat_id: int, message_id: int, button: str, user_id: int):
-    async with aiosqlite.connect(DATABASE_URL) as db:
-        cursor = await db.execute("select 1 from likes where chat_id=? and message_id=? and button=? and user_id=?", (chat_id, message_id, button, user_id))
-        rows = len(await cursor.fetchall())
-        if rows == 0:
-            await db.execute("insert into likes (chat_id,message_id,button,user_id) values (?,?,?,?)", (chat_id, message_id, button, user_id))
-        else:
-            await db.execute("delete from likes where chat_id=? and message_id=? and button=? and user_id=?", (chat_id, message_id, button, user_id))
-        
-        await db.commit()
-        
-        cursor = await db.execute("select button,user_id from likes where chat_id=? and message_id=?", (chat_id, message_id))
-        rows = await cursor.fetchall()
-    return rows
+
