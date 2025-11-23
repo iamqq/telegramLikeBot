@@ -45,6 +45,11 @@ async def send_welcome(message: types.Message):
 
 @dp.message_handler(commands=['chatlikes'])
 async def set_chat_likes(message: types.Message):
+    member = await bot.get_chat_member(message.chat.id, message.from_user.id)
+    if not member.is_chat_admin():
+        await message.reply("Only administrators can change chat likes.")
+        return
+
     likes = message.text[11:]
     await db.set_chat_likes(message.chat.id, likes)
     await message.reply("Chat likes updated.")
