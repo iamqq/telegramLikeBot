@@ -39,6 +39,7 @@ async def send_welcome(message: types.Message):
         "<b>/userlikes Нет Like ⚙️ Да Очень_хорошо</b>\n" 
         "отдельные значения разделять <b>пробелом</b>\n"
         "пробел в тексте заменяйте <b>подчеркиванием _</b>\n\n"
+        "<b>/chatid</b> - получить ID текущего чата\n\n"
         "<b>/chatlikes</b> и <b>/userlikes</b> без параметров\n"
         " - вернуться к набору по умолчанию",
         parse_mode="HTML")
@@ -59,6 +60,10 @@ async def set_user_likes(message: types.Message):
     likes = message.text[11:]
     await db.set_user_likes(message.chat.id, message.from_user.id, likes)
     await message.reply("User likes updated.")
+
+@dp.message_handler(commands=['chatid'])
+async def get_chat_id(message: types.Message):
+    await message.answer(f"Chat ID: <code>{message.chat.id}</code>", parse_mode="HTML")
 
 @dp.message_handler(commands=['currentlikes'])
 async def get_current_likes(message: types.Message):
