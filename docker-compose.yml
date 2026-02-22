@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  bot:
+    image: 192.168.86.238:5000/telegram-like-bot
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    environment:
+      - API_TOKEN=${API_TOKEN}
+      - DATABASE_URL=/app/data/bot.db

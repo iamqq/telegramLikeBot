@@ -1,0 +1,17 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.env
+.venv
+Pipfile
+Pipfile.lock
+.git
+.gitignore
+.idea
+.vscode
+*.db
+bot.db
