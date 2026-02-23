@@ -49,6 +49,7 @@ async def set_chat_likes(message: types.Message):
     if message.chat.type != 'private':
         member = await bot.get_chat_member(message.chat.id, message.from_user.id)
         if not member.is_chat_admin():
+            logger.warning(f"Failed admin check in /chatlikes. Chat type: {message.chat.type}, Chat ID: {message.chat.id}")
             await message.reply("Only administrators can change chat likes.")
             return
 
@@ -222,6 +223,8 @@ async def process_callback_button1(callback_query: types.CallbackQuery):
     
     await callback_query.answer() # Stop the loading animation
 
+bot_version = "v1.1.0" # Version where chatlikes admin restriction was removed for private chats
+
 if __name__ == '__main__':
     # Ensure DB is initialized (optional, but good practice if we had an init function)
     # Since we don't have an explicit init loop here, we rely on the functions opening connections.
@@ -229,4 +232,5 @@ if __name__ == '__main__':
     # loop = asyncio.get_event_loop()
     # loop.run_until_complete(db.init_db())
     
+    logger.info(f"--- Starting Telegram Like Bot {bot_version} ---")
     executor.start_polling(dp, skip_updates=True)
